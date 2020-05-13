@@ -56,7 +56,7 @@ input {
   String genereadSuffix = "ReadsPerGene.out"
   String? addParam
   String modules = "star/2.7.3a hg38-star-index100/2.7.3a"
-  String outType = "WithinBAM SoftClip Junctions"
+  String outType = "Junctions SeparateSAMold"
   Int uniqMAPQ = 255
   Int saSparsed = 2
   Int multiMax = -1
@@ -67,8 +67,10 @@ input {
   Int alignIntMax = 100000
   Int chimMulmapScoRan = 3
   Int chimScoJunNonGTAG = -4
+  Int chimMulmapNmax = 20
   Int chimNonchimScoDMin = 10
   Int? chimOutJunForm
+  Int peOvNbasesMin = 12
   Float peOvMMp = 0.1
   Int threads = 6
   Int jobMemory = 64
@@ -96,8 +98,10 @@ parameter_meta {
  outType: "how to chimeric information is to be stored"
  chimMulmapScoRan: "the score range for multi-mapping chimeras below the best chimeric score"
  chimScoJunNonGTAG: "penalty for a non-GTAG chimeric junction"
+ chimMulmapNmax: "maximum number of chimeric multi-alignments"
  chimNonchimScoDMin: "to trigger chimeric detection, the drop in the best non-chimeric alignment score with respect to the read length has to be greater than this value"
  chimOutJunForm: "flag to add metadata to chimeric junction output for functionality with starFusion - 1 for metadata, 0 for no metadata"
+ peOvNbasesMin: "minimum number of overlap bases to trigger mates merging and realignment"
  peOvMMp: "maximum proportion of mismatched bases in the overlap area"
  threads: "Requested CPU threads"
  jobMemory: "Memory allocated for this job"
@@ -130,7 +134,9 @@ command <<<
       --chimMultimapScoreRange ~{chimMulmapScoRan} \
       --chimScoreJunctionNonGTAG ~{chimScoJunNonGTAG} \
       --chimNonchimScoreDropMin ~{chimNonchimScoDMin} \
+      --chimMultimapNmax ~{chimMulmapNmax} \
       ~{"--chimOutJunctionFormat " + chimOutJunForm} \
+      --peOverlapNbasesMin ~{peOvNbasesMin} \
       --peOverlapMMp ~{peOvMMp} \
       --runThreadN ~{threads} ~{addParam}
 >>>
@@ -146,6 +152,7 @@ output {
  File outputBam        = "~{outputFileNamePrefix}.~{starSuffix}.bam"
  File outputChimeric   = "~{outputFileNamePrefix}.~{chimericjunctionSuffix}.junction"
  File transcriptomeBam = "~{outputFileNamePrefix}.~{transcriptomeSuffix}.bam"
+ File chimericSam      = "~{outputFileNamePrefix}.~{chimericjunctionSuffix}.sam
  File geneReads        = "~{outputFileNamePrefix}.~{genereadSuffix}.tab"
 }
 
@@ -154,7 +161,8 @@ meta {
     outputBam:        "Output bam aligned to genome",
     outputChimeric:   "Output chimeric junctions file",
     transcriptomeBam: "Output bam aligned to transcriptome",
-    geneReads:        "Output raw read counts per transcript"
+    geneReads:        "Output raw read counts per transcript",
+    chimericSam:      "Chimeric reads in sam alignment"
   }
 }
 
