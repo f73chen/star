@@ -22,6 +22,7 @@ task find_tools {
         String message = read_string(stdout())
     }
     runtime {
-        docker: "g3chen/star:1.0"
+        docker: "g3chen/star:2.0"
+        modules: "star/2.7.3a picard/2.19.2"
     }
 }
